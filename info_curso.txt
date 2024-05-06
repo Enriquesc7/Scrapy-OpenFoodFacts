@@ -1,0 +1,92 @@
+Curso de Scrapy
+
+
+--- Utileria ---
+- Pagina para practicar --> http://toscrape.com/
+- Carpetas/Archivos a ingnorar en .gitignore --> https://raw.githubusercontent.com/github/gitignore/master/Python.gitignore
+- Documentación de Scrapy --> https://docs.scrapy.org/en/latest/
+
+
+--- Instalación de dependencias ---
+- pip install scrapy autopep8
+
+
+--- Inicializar un proyecto en scrapy ---
+- scrapy startproject nombre_proyecto
+
+
+--- Ingresar a la shell de scrapy ---
+- Ubicarse en el directorio del proyecto, y ejecutar el comando:
+    scrapy shell 'http://quotes.toscrape.com/'     (o la dirección del sitio al que se quiera hacer scraper)
+                                                    para salir --> exit()
+
+- Comandos interesantes que podemos utilizar en la shell
+    --> Analizando el objeto response
+        - response.xpath('//h1/a/text()') --> me trae el objeto Selector, y para obtener el contenido se hace con get()
+        - response.xpath('//h1/a/text()').get() --> 'Quotes to Scrape'
+        Para obtener todas las citas no nos sirve ocupar get(), para ello usamos getall(), que nos entrega una lista 
+        con todas las citas. 
+        - response.xpath('//span[@class="text" and @itemprop="text"]/text()').getall()
+
+    --> Analizando el objeto request
+        - request.encoding  --> 'utf-8'
+        - request.method    --> 'GET'
+        - request.status    --> 200
+        - request.headers   --> Nos retorna información del servidor, content-type y otra información util...
+        - request.body      --> Nos retorna el html del sitio...
+    
+    --> Estudiar el resto de objetos en : https://docs.scrapy.org/en/latest/
+
+
+---------- Primer Proyecto -------------
+
+- scrapy.cfg    : Archivo que nos sierve para realizar un posterior deploy.
+- spiders/      : Donde se crearan los scripts.
+- pipelines.py  : Permite modificar los datos desde que entran al spider (scripts que extraen información) hasta el final.
+- middlewares.py: Trabaja con un concepto denominado señales: controla eventos que suceden entre los requests y la 
+                  captura de información.
+- items.py      : Transforma los datos que se reciben del requests para guardarlos de una manera standart.
+- settings.py   : Archivo con configuraciones del uso de Scrapy.
+
+
+--- Spiders ---
+- En temrinos sencillos:
+--> Un Spider es una clase de Python en la cual definimos logica necesaria para estraer información.
+
+Cuando comenzamos a crear nuestra clase, hay que definir un metodo obligatorio llamado 'parse'
+        --> class QuotesSpiders(scrapy.Spider):
+                name = 'quotes'
+                start_url = [
+                    'link_pagina'
+                ]
+
+                def parse():
+                    pass
+
+        parse = Análizar gramaticalmente (traduccción de ingles-españo)
+        "Este metodo quiere decir, análizar un archivo para extraer información valiosa a partir de él;
+        Análizar la respuesta http que nos envia la petición a esta página, y a partir de esa respuesta, traer
+        toda la información que nosotros queremos"
+
+        Experimento para obtener el html del sitio en el metdo parse...
+        -->     with open('resultados.html', 'w', encoding='utf-8') as f:
+                    f.write(response.text)
+
+
+--- Seguir links: response.follow ---
+
+- Luego de haber rescatado la información con response.xpath('//...'), y retornarla con 'yield' como un 
+diccionario, podemos almacenarla en un archivo (json, csv...) con el siguiente comando:
+    --> scrapy crawl quotes -o quotes.json     (-o de 'output')
+
+    Si el archivo no es el deseado, eliminar y crear nuevamente
+    --> rm quotes.json && scrapy crawl quotes -o quotes.json
+
+    --> Para no tener que escribir el comando cada vez que queremos generar el archivo, podemos hacerlo con
+        'custom_settings'.
+    --> 'FEED_URI' y 'FEED_FORMAT' aún funcionan, pero estan deprecados desde la versión 2.1 (tenemos la 2.8.0)
+        Para más información ver --> https://docs.scrapy.org/en/latest/news.html?highlight=FEED_URI#id22
+
+
+--- Múltiples callbacks ---
+
