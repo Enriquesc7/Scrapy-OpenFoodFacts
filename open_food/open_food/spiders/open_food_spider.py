@@ -24,12 +24,12 @@ from selenium.common.exceptions import TimeoutException
 class SpiderOpenFood(scrapy.Spider):
     name = 'open_food'
     start_urls = [
-        'https://fr.openfoodfacts.org/conditionnement/plastique'        
+        'https://fr.openfoodfacts.org/categorie/boissons-avec-sucre-ajoute'        
     ]
 
     custom_settings = {
         'FEEDS':{
-            'open_food.json':{
+            'open_food_boissons_avec_sucre.json':{
                 'format': 'json',
                 'encoding': 'utf8',
                 'store_empty': False,
@@ -59,12 +59,12 @@ class SpiderOpenFood(scrapy.Spider):
         # La lista obtenida es: ["1","2","3","4","661","662","663","Suivant"]
         # Como queremos iterar todas las paginas, necesitamos el número mayor (como entero)
         total_pages = int(page_numbers[-2])
-        
+        #total_pages = 2
         # Obtenemos la url del sitio que queremos obtener la información
         principal = response.url
 
         # Como probaremos mientras tanto, definiremos el range en 1 página (obtenemos solo 100 productos)... luego iteraremos todo para obtener todos los registros del sitio. 
-        for page in range(1,2):
+        for page in range(1,total_pages+1):
 
             # Formamos la url actual: con la url principal y el número de la misma al que queremos ir...
             current_url = f'{principal}/{page}'
@@ -161,6 +161,10 @@ class SpiderOpenFood(scrapy.Spider):
                 'image': response.xpath('//ul[@id="panel_packaging_recycling"]/li/a/img/@src').get(),
                 'image_label': response.xpath('//div[@id="image_box_packaging"]/figure/a/img/@src').get(),
                 'content': response.xpath('//a[@href="#panel_packaging_recycling_content"]/h4/text()').get(),
+                'element_emballage': {
+                    'element': response.xpath('//div[@id="panel_packaging_components_content"]/div/div/div/text()').getall(),
+                    'material': response.xpath('//div[@id="panel_packaging_components_content"]/div/div/div/strong/text()').getall()
+                },
                 'materials': {
                     'columns': response.xpath('//div[@id="panel_packaging_materials_content"]/div/table/thead/tr/th/text()').getall(),
                     'rows': response.xpath('//div[@id="panel_packaging_materials_content"]/div/table/tbody/tr/td/span/text()').getall()
